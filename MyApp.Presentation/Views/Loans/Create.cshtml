@@ -1,0 +1,64 @@
+﻿@model MyApp.Presentation.Models.CreateLoanViewModel
+@{
+    ViewData["Title"] = "Solicitar Préstamo";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            @* El tag <form> ahora envuelve toda la tarjeta para incluir el pie de página con los botones. *@
+            <form asp-action="Create" method="post">
+                <div class="card-header">
+                    <h4><i class="fas fa-plus"></i> Solicitar Nuevo Préstamo</h4>
+                </div>
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="ItemId" class="form-label">Artículo</label>
+                        <select asp-for="ItemId" class="form-select" asp-items="ViewBag.Items">
+                            <option value="">-- Selecciona un artículo --</option>
+                        </select>
+                        <span asp-validation-for="ItemId" class="text-danger"></span>
+                        <div class="form-text">Solo se muestran artículos disponibles para préstamo.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DeliveryDate" class="form-label">Fecha de Entrega Deseada</label>
+                        <input asp-for="DeliveryDate" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="DeliveryDate" class="text-danger"></span>
+                        <div class="form-text">Fecha opcional cuando te gustaría recibir el artículo.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Comments" class="form-label">Comentarios</label>
+                        <textarea asp-for="Comments" class="form-control" rows="4"
+                                  placeholder="Comentarios adicionales sobre el préstamo (opcional)"></textarea>
+                        <span asp-validation-for="Comments" class="text-danger"></span>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Información:</strong> Tu solicitud será revisada por un administrador antes de ser aprobada.
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group" role="group">
+                        @* El botón ahora está correctamente dentro del formulario. Se elimina el atributo 'form'. *@
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Enviar Solicitud
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @* El script que asignaba el ID al formulario ya no es necesario y ha sido eliminado. *@
+}

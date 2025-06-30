@@ -1,0 +1,152 @@
+﻿@model MyApp.Presentation.Models.LoansIndexViewModel
+@{
+    ViewData["Title"] = "Préstamos";
+}
+
+@functions {
+    string GetStatusBadgeClass(MyApp.Entities.Enums.LoanStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.LoanStatus.Pending => "warning",
+            MyApp.Entities.Enums.LoanStatus.Approved => "info",
+            MyApp.Entities.Enums.LoanStatus.Delivered => "primary",
+            MyApp.Entities.Enums.LoanStatus.Returned => "success",
+            MyApp.Entities.Enums.LoanStatus.Rejected => "danger",
+            _ => "secondary"
+        };
+    }
+
+    string GetStatusText(MyApp.Entities.Enums.LoanStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.LoanStatus.Pending => "Pendiente",
+            MyApp.Entities.Enums.LoanStatus.Approved => "Aprobado",
+            MyApp.Entities.Enums.LoanStatus.Delivered => "Entregado",
+            MyApp.Entities.Enums.LoanStatus.Returned => "Devuelto",
+            MyApp.Entities.Enums.LoanStatus.Rejected => "Rechazado",
+            _ => status.ToString()
+        };
+    }
+
+    string FormatDate(DateTime? date)
+    {
+        return date?.ToString("dd/MM/yyyy") ?? "-";
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-handshake"></i> Préstamos</h1>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Solicitar Nuevo Préstamo
+    </a>
+</div>
+
+<!-- Filtros de Estado -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <label class="form-label fw-bold">Filtrar por Estado:</label>
+                <div class="btn-group d-flex flex-wrap" role="group">
+                    <a asp-action="Index" class="btn @(Model.SelectedStatus == null ? "btn-primary" : "btn-outline-primary")">
+                        Todos
+                    </a>
+                    @foreach (var status in Enum.GetValues<MyApp.Entities.Enums.LoanStatus>())
+                    {
+                        <a asp-action="Index" asp-route-status="@status"
+                           class="btn @(Model.SelectedStatus == status ? "btn-primary" : "btn-outline-primary")">
+                            @GetStatusText(status)
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Préstamos -->
+@if (Model.Loans.Any())
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            @if (User.IsInRole("Administrator"))
+                            {
+                                <th>Usuario</th>
+                            }
+                            <th>Artículo</th>
+                            <th>Cód. Artículo</th>
+                            <th>Fecha de Solicitud</th>
+                            <th>Fecha de Entrega</th>
+                            <th>Fecha de Regreso</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model.Loans)
+                        {
+                            <tr>
+                                <td>@loan.Id</td>
+                                @if (User.IsInRole("Administrator"))
+                                {
+                                    <td>@loan.UserName</td>
+                                }
+                                <td>@loan.ItemName</td>
+                                <td><code>@loan.ItemCode</code></td>
+                                <td>
+                                    <span class="text-muted small">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </span><br>
+                                    @loan.RequestDate.ToString("dd/MM/yyyy")
+                                </td>
+                                <td>
+                                    <span class="text-muted small">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </span><br>
+                                    @FormatDate(loan.DeliveryDate)
+                                </td>
+                                <td>
+                                    <span class="text-muted small">
+                                        <i class="fas fa-calendar-times"></i>
+                                    </span><br>
+                                    @FormatDate(loan.ReturnDate)
+                                </td>
+                                <td>
+                                    <span class="badge bg-@GetStatusBadgeClass(loan.Status)">
+                                        @GetStatusText(loan.Status)
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="Details" asp-route-id="@loan.Id"
+                                           class="btn btn-outline-info" title="Ver Detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No se encontraron préstamos</h4>
+        <p class="text-muted">Intente ajustar los filtros o solicite un nuevo préstamo.</p>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Solicitar Nuevo Préstamo
+        </a>
+    </div>
+}

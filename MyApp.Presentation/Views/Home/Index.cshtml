@@ -1,0 +1,218 @@
+﻿@model MyApp.Presentation.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Panel de Control";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt"></i> Panel de Control
+        </h1>
+    </div>
+</div>
+
+<!-- Tarjetas de Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@Model.TotalItems</h4>
+                        <span>Total Artículos</span>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-cubes fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@Model.AvailableItems</h4>
+                        <span>Disponibles</span>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@Model.ItemsOnLoan</h4>
+                        <span>En Préstamo</span>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-handshake fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@Model.ActiveLoans</h4>
+                        <span>Préstamos Activos</span>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@Model.PendingLoans</h4>
+                        <span>Pendientes</span>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-hourglass-half fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>@Model.TotalUsers</h4>
+                        <span>Total Usuarios</span>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Préstamos Recientes -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-history"></i> Préstamos Recientes</h5>
+                <a asp-controller="Loans" asp-action="Index" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentLoans.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Artículo</th>
+                                    <th>Fecha Solicitud</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var loan in Model.RecentLoans)
+                                {
+                                    <tr>
+                                        <td>@loan.UserName</td>
+                                        <td>@loan.ItemName</td>
+                                        <td>@loan.RequestDate.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <span class="badge bg-@GetStatusBadgeClass(loan.Status)">
+                                                @GetStatusText(loan.Status)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center mb-0">No hay préstamos recientes</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Préstamos Vencidos -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Préstamos Vencidos</h5>
+                @if (User.IsInRole("Administrator"))
+                {
+                    <a asp-controller="Loans" asp-action="Overdue" class="btn btn-sm btn-outline-danger">Ver Todos</a>
+                }
+            </div>
+            <div class="card-body">
+                @if (Model.OverdueLoans.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var loan in Model.OverdueLoans.Take(5))
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">@loan.ItemName</div>
+                                    <small class="text-muted">@loan.UserName</small>
+                                </div>
+                                <small class="text-danger">
+                                    @((DateTime.Now - loan.DeliveryDate.Value).Days) días
+                                </small>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center mb-0">No hay préstamos vencidos</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(MyApp.Entities.Enums.LoanStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.LoanStatus.Pending => "warning",
+            MyApp.Entities.Enums.LoanStatus.Approved => "info",
+            MyApp.Entities.Enums.LoanStatus.Delivered => "primary",
+            MyApp.Entities.Enums.LoanStatus.Returned => "success",
+            MyApp.Entities.Enums.LoanStatus.Rejected => "danger",
+            _ => "secondary"
+        };
+    }
+
+    string GetStatusText(MyApp.Entities.Enums.LoanStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.LoanStatus.Pending => "Pendiente",
+            MyApp.Entities.Enums.LoanStatus.Approved => "Aprobado",
+            MyApp.Entities.Enums.LoanStatus.Delivered => "Entregado",
+            MyApp.Entities.Enums.LoanStatus.Returned => "Devuelto",
+            MyApp.Entities.Enums.LoanStatus.Rejected => "Rechazado",
+            _ => "Desconocido"
+        };
+    }
+}

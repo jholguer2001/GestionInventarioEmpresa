@@ -1,0 +1,162 @@
+﻿@{
+    ViewData["Title"] = "Reportes";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-bar"></i> Reportes del Sistema
+        </h1>
+        <p class="text-muted">Genera y exporta varios reportes del sistema de inventario</p>
+    </div>
+</div>
+
+<!-- 🎯 BOTÓN DE PRUEBA PARA DEBUGGING -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <strong>🧪 Modo Debug:</strong> Si tienes problemas, prueba primero el PDF de prueba:
+            <form asp-action="TestPdfGeneration" method="post" class="d-inline ms-2">
+                <button type="submit" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-flask"></i> Probar PDF
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Reportes PDF -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-pdf"></i> Reportes PDF
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <form asp-action="ExportItemsPdf" method="post" class="d-inline" id="form-items">
+                        <button type="submit" class="btn btn-outline-danger btn-lg w-100" id="btn-items">
+                            <i class="fas fa-cubes"></i>
+                            <div>
+                                <strong>Reporte de Artículos</strong>
+                                <br><small>Listado completo del inventario con estado</small>
+                            </div>
+                        </button>
+                    </form>
+
+                    <form asp-action="ExportInventoryStatusPdf" method="post" class="d-inline" id="form-inventory">
+                        <button type="submit" class="btn btn-outline-danger btn-lg w-100" id="btn-inventory">
+                            <i class="fas fa-chart-pie"></i>
+                            <div>
+                                <strong>Estado del Inventario</strong>
+                                <br><small>Resumen con estadísticas y categorías</small>
+                            </div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reportes Excel -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-excel"></i> Reportes Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <form asp-action="ExportLoansExcel" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-success btn-lg w-100">
+                            <i class="fas fa-handshake"></i>
+                            <div>
+                                <strong>Reporte de Préstamos</strong>
+                                <br><small>Todos los préstamos con información detallada</small>
+                            </div>
+                        </button>
+                    </form>
+
+                    <div class="card border-0">
+                        <div class="card-body p-0">
+                            <form asp-action="ExportUserActivity" method="post">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small">Fecha Desde</label>
+                                        <input type="date" name="fromDate" class="form-control form-control-sm"
+                                               value="@DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd")" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Fecha Hasta</label>
+                                        <input type="date" name="toDate" class="form-control form-control-sm"
+                                               value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-outline-success btn-lg w-100">
+                                    <i class="fas fa-user-clock"></i>
+                                    <div>
+                                        <strong>Actividad de Usuarios</strong>
+                                        <br><small>Registro de auditoría para el período seleccionado</small>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 🎯 JAVASCRIPT MEJORADO CON DEBUG
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔄 Inicializando sistema de reportes...');
+
+            // Configurar manejo de formularios
+            const forms = document.querySelectorAll('form[asp-action]');
+            console.log(`📋 Encontrados ${forms.length} formularios`);
+
+            forms.forEach(form => {
+                const button = form.querySelector('button[type="submit"]');
+                if (button) {
+                    form.addEventListener('submit', function(e) {
+                        console.log(`🚀 Enviando formulario: ${form.getAttribute('asp-action')}`);
+
+                        // Mostrar estado de carga
+                        const originalHtml = button.innerHTML;
+                        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+                        button.disabled = true;
+
+                        // Timeout de seguridad
+                        const timeout = setTimeout(() => {
+                            console.log('⏰ Timeout alcanzado, restaurando botón');
+                            button.innerHTML = originalHtml;
+                            button.disabled = false;
+                            alert('El reporte está tardando más de lo esperado. Revisa los logs del servidor.');
+                        }, 30000); // 30 segundos
+
+                        // Cleanup cuando la página se descarga (PDF generado)
+                        window.addEventListener('beforeunload', () => {
+                            clearTimeout(timeout);
+                        });
+                    });
+                }
+            });
+
+            console.log('✅ Sistema de reportes inicializado');
+        });
+
+        // 🎯 FUNCIÓN DE DEBUG
+        window.debugReports = function() {
+            console.log('🔍 Estado del sistema de reportes:');
+            console.log('- Formularios encontrados:', document.querySelectorAll('form[asp-action]').length);
+            console.log('- Botones encontrados:', document.querySelectorAll('button[type="submit"]').length);
+            console.log('- URL actual:', window.location.href);
+        };
+    </script>
+}

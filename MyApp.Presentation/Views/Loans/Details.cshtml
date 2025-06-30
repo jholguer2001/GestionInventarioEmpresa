@@ -1,0 +1,150 @@
+﻿@model MyApp.Business.Dtos.Loan.LoanDto
+@{
+    ViewData["Title"] = "Detalles del Préstamo";
+}
+
+@functions {
+    string GetStatusBadgeClass(MyApp.Entities.Enums.LoanStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.LoanStatus.Pending => "warning",
+            MyApp.Entities.Enums.LoanStatus.Approved => "info",
+            MyApp.Entities.Enums.LoanStatus.Delivered => "primary",
+            MyApp.Entities.Enums.LoanStatus.Returned => "success",
+            MyApp.Entities.Enums.LoanStatus.Rejected => "danger",
+            _ => "secondary"
+        };
+    }
+
+    string GetStatusText(MyApp.Entities.Enums.LoanStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.LoanStatus.Pending => "Pendiente",
+            MyApp.Entities.Enums.LoanStatus.Approved => "Aprobado",
+            MyApp.Entities.Enums.LoanStatus.Delivered => "Entregado",
+            MyApp.Entities.Enums.LoanStatus.Returned => "Devuelto",
+            MyApp.Entities.Enums.LoanStatus.Rejected => "Rechazado",
+            _ => status.ToString()
+        };
+    }
+}
+
+<div class="row">
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-handshake"></i> Detalles del Préstamo #@Model.Id</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Detalles del Préstamo</h5>
+                        <dl class="row">
+                            <dt class="col-sm-5">Usuario:</dt>
+                            <dd class="col-sm-7">@Model.UserName</dd>
+
+                            <dt class="col-sm-5">Estado:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge fs-6 bg-@GetStatusBadgeClass(Model.Status)">
+                                    @GetStatusText(Model.Status)
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-5">Fecha Solicitud:</dt>
+                            <dd class="col-sm-7">@Model.RequestDate.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                            <dt class="col-sm-5">Fecha Entrega:</dt>
+                            <dd class="col-sm-7">@(Model.DeliveryDate?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")</dd>
+
+                            <dt class="col-sm-5">Fecha Devolución:</dt>
+                            <dd class="col-sm-7">@(Model.ReturnDate?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Detalles del Artículo</h5>
+                        <dl class="row">
+                            <dt class="col-sm-5">Artículo:</dt>
+                            <dd class="col-sm-7">@Model.ItemName</dd>
+
+                            <dt class="col-sm-5">Código:</dt>
+                            <dd class="col-sm-7"><code>@Model.ItemCode</code></dd>
+                        </dl>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Comments))
+                {
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h5>Comentarios</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <p class="mb-0" style="white-space: pre-wrap;">@Model.Comments</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                <div class="btn-group" role="group">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver a la Lista
+                    </a>
+
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        @if (Model.Status == MyApp.Entities.Enums.LoanStatus.Approved)
+                        {
+                            <form asp-action="Deliver" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-truck"></i> Marcar como Entregado
+                                </button>
+                            </form>
+                        }
+
+                        @if (Model.Status == MyApp.Entities.Enums.LoanStatus.Delivered)
+                        {
+                            <button type="button" class="btn btn-warning"
+                                    data-bs-toggle="modal" data-bs-target="#returnModal">
+                                <i class="fas fa-undo"></i> Marcar como Devuelto
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Devolución -->
+@if (User.IsInRole("Administrator") && Model.Status == MyApp.Entities.Enums.LoanStatus.Delivered)
+{
+    <div class="modal fade" id="returnModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="Return" asp-route-id="@Model.Id" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Devolver Artículo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Artículo:</strong> @Model.ItemName</p>
+                        <p><strong>Usuario:</strong> @Model.UserName</p>
+                        <div class="mb-3">
+                            <label for="comments" class="form-label">Comentarios de Devolución:</label>
+                            <textarea name="comments" id="comments" class="form-control" rows="3"
+                                      placeholder="Comentarios sobre el estado del artículo al ser devuelto (opcional)"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Confirmar Devolución</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

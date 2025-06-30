@@ -1,0 +1,14 @@
+﻿global using MyApp.Entities.Enums;
+global using MyApp.Business.Dtos.Login;
+global using MyApp.Business.Dtos.User;
+global using MyApp.Business.Dtos.Item;
+global using MyApp.Business.Dtos.Loan;
+global using MyApp.Entities.Models;
+global using Microsoft.AspNetCore.Http;
+global using MyApp.Business.Services.Interfaces;
+global using System.Security.Claims;
+global using MyApp.DataAccess.UnitOfWork;
+global using Newtonsoft.Json;
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authentication.Cookies;
+global using System.ComponentModel.DataAnnotations;

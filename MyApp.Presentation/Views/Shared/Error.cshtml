@@ -1,0 +1,49 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="text-center">
+    <h1 class="display-1 fw-bold text-danger">Error</h1>
+    <p class="fs-3"><span class="text-danger">¡Oops!</span> Algo salió mal.</p>
+    <p class="lead">Ha ocurrido un error mientras procesábamos tu solicitud.</p>
+
+    @if (Model.ShowRequestId)
+    {
+        <p>
+            <strong>ID de Solicitud:</strong> <code>@Model.RequestId</code>
+        </p>
+    }
+
+    <div class="mt-4">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+            <i class="fas fa-home"></i> Ir al Inicio
+        </a>
+        <button onclick="history.back()" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver Atrás
+        </button>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Información para Desarrolladores
+                </h6>
+            </div>
+            <div class="card-body">
+                <p>
+                    Si este error persiste, por favor contacta al administrador del sistema
+                    proporcionando el <strong>ID de Solicitud</strong> mostrado arriba.
+                </p>
+                <p class="mb-0">
+                    <strong>Nota:</strong> En el entorno de <strong>Desarrollo</strong> se mostrarían
+                    detalles más específicos sobre este error. Para aplicaciones en producción,
+                    esta información se oculta por seguridad.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

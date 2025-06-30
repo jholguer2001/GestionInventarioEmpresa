@@ -1,0 +1,97 @@
+﻿@model MyApp.Presentation.Models.EditItemViewModel
+@{
+    ViewData["Title"] = "Editar Artículo";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-edit"></i> Editar Artículo</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <input asp-for="Id" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Code" class="form-label">Código</label>
+                                <input asp-for="Code" class="form-control" placeholder="Ingresa el código del artículo" />
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label">Nombre</label>
+                                <input asp-for="Name" class="form-control" placeholder="Ingresa el nombre del artículo" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Category" class="form-label">Categoría</label>
+                                <input asp-for="Category" class="form-control" placeholder="Ingresa la categoría" />
+                                <span asp-validation-for="Category" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Status" class="form-label">Estado</label>
+                                <select asp-for="Status" class="form-select">
+                                    @foreach (var status in Enum.GetValues<MyApp.Entities.Enums.ItemStatus>())
+                                    {
+                                        <option value="@status">@GetStatusText(status)</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Location" class="form-label">Ubicación</label>
+                        <input asp-for="Location" class="form-control" placeholder="Ingresa la ubicación" />
+                        <span asp-validation-for="Location" class="text-danger"></span>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="btn-group" role="group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Actualizar Artículo
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusText(MyApp.Entities.Enums.ItemStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.ItemStatus.Available => "Disponible",
+            MyApp.Entities.Enums.ItemStatus.OnLoan => "En Préstamo",
+            MyApp.Entities.Enums.ItemStatus.Maintenance => "Mantenimiento",
+            MyApp.Entities.Enums.ItemStatus.Decommissioned => "Fuera de Servicio",
+            _ => "Desconocido"
+        };
+    }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

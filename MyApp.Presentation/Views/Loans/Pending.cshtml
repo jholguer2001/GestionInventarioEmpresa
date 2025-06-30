@@ -1,0 +1,146 @@
+﻿@model IEnumerable<MyApp.Business.Dtos.Loan.LoanDto>
+@{
+    ViewData["Title"] = "Préstamos Pendientes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-clock"></i> Préstamos Pendientes</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-list"></i> Ver Todos los Préstamos
+    </a>
+</div>
+
+@if (Model.Any())
+{
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        Hay <strong>@Model.Count()</strong> préstamo(s) esperando tu aprobación.
+    </div>
+
+    <div class="row">
+        @foreach (var loan in Model)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="fas fa-user"></i> @loan.UserName
+                            <span class="badge bg-dark float-end">#@loan.Id</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">@loan.ItemName</h5>
+                        <p class="card-text">
+                            <strong>Código:</strong> <code>@loan.ItemCode</code><br>
+                            <strong>Solicitado:</strong> @loan.RequestDate.ToString("dd/MM/yyyy HH:mm")<br>
+                            @if (loan.DeliveryDate.HasValue)
+                            {
+                                <strong>Fecha deseada:</strong> @loan.DeliveryDate.Value.ToString("dd/MM/yyyy")<br>
+                            }
+                            @if (!string.IsNullOrEmpty(loan.Comments))
+                            {
+                                <strong>Comentarios:</strong> @loan.Comments
+                            }
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-success btn-sm w-100" 
+                                        data-bs-toggle="modal" data-bs-target="#approveModal@(loan.Id)">
+                                    <i class="fas fa-check"></i> Aprobar
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-danger btn-sm w-100" 
+                                        data-bs-toggle="modal" data-bs-target="#rejectModal@(loan.Id)">
+                                    <i class="fas fa-times"></i> Rechazar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <a asp-action="Details" asp-route-id="@loan.Id" class="btn btn-outline-info btn-sm w-100">
+                                    <i class="fas fa-eye"></i> Ver Detalles
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Aprobar -->
+            <div class="modal fade" id="approveModal@(loan.Id)" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form asp-action="Approve" method="post">
+                            <input type="hidden" name="id" value="@loan.Id" />
+                            <input type="hidden" name="approved" value="true" />
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">Aprobar Préstamo</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p><strong>Usuario:</strong> @loan.UserName</p>
+                                <p><strong>Artículo:</strong> @loan.ItemName (@loan.ItemCode)</p>
+                                <div class="mb-3">
+                                    <label for="approveComments@(loan.Id)" class="form-label">Comentarios (opcional)</label>
+                                    <textarea name="comments" id="approveComments@(loan.Id)" class="form-control" rows="3"
+                                              placeholder="Comentarios sobre la aprobación"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Aprobar Préstamo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Rechazar -->
+            <div class="modal fade" id="rejectModal@(loan.Id)" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form asp-action="Approve" method="post">
+                            <input type="hidden" name="id" value="@loan.Id" />
+                            <input type="hidden" name="approved" value="false" />
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Rechazar Préstamo</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p><strong>Usuario:</strong> @loan.UserName</p>
+                                <p><strong>Artículo:</strong> @loan.ItemName (@loan.ItemCode)</p>
+                                <div class="mb-3">
+                                    <label for="rejectComments@(loan.Id)" class="form-label">Motivo del rechazo</label>
+                                    <textarea name="comments" id="rejectComments@(loan.Id)" class="form-control" rows="3"
+                                              placeholder="Explica el motivo del rechazo" required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times"></i> Rechazar Préstamo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+        <h4 class="text-muted">¡Excelente!</h4>
+        <p class="text-muted">No hay préstamos pendientes de aprobación.</p>
+        <a asp-action="Index" class="btn btn-primary">
+            <i class="fas fa-list"></i> Ver Todos los Préstamos
+        </a>
+    </div>
+}

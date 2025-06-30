@@ -1,0 +1,220 @@
+﻿@model IEnumerable<MyApp.Business.Dtos.Loan.LoanDto>
+@{
+    ViewData["Title"] = "Préstamos Vencidos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Préstamos Vencidos</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-list"></i> Ver Todos los Préstamos
+    </a>
+</div>
+
+<!-- Información de depuración -->
+<div class="alert alert-info">
+    <strong>ℹ️ Información:</strong> Se muestran préstamos que están <strong>entregados</strong>,
+    <strong>NO devueltos</strong> y han pasado <strong>1 días</strong> desde la entrega.
+    <br><small class="text-muted">
+        Fecha actual: @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") |
+        Límite: @DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd HH:mm:ss")
+    </small>
+</div>
+
+@if (Model.Any())
+{
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>¡Atención!</strong> Hay <strong>@Model.Count()</strong> préstamo(s) vencido(s) que requieren seguimiento.
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-danger">
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Artículo</th>
+                            <th>Código</th>
+                            <th>Fecha Entrega</th>
+                            <th>Días Vencido</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model.OrderBy(l => l.DeliveryDate))
+                        {
+                            var daysOverdue = loan.DeliveryDate.HasValue
+                            ? (DateTime.Now - loan.DeliveryDate.Value).Days
+                            : 0;
+                            var severityClass = daysOverdue > 30 ? "table-danger"
+                            : (daysOverdue > 14 ? "table-warning" : "");
+
+                            <tr class="@severityClass">
+                                <td><strong>@loan.Id</strong></td>
+                                <td>
+                                    <strong>@loan.UserName</strong>
+                                    @if (daysOverdue > 30)
+                                    {
+                                        <span class="badge bg-danger ms-1">CRÍTICO</span>
+                                    }
+                                    else if (daysOverdue > 14)
+                                    {
+                                        <span class="badge bg-warning ms-1">URGENTE</span>
+                                    }
+                                </td>
+                                <td>@loan.ItemName</td>
+                                <td><code>@loan.ItemCode</code></td>
+                                <td>
+                                    @if (loan.DeliveryDate.HasValue)
+                                    {
+                                        @loan.DeliveryDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin fecha</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger fs-6">
+                                        @daysOverdue día(s)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@GetStatusBadgeClass(loan.Status)">
+                                        @GetStatusText(loan.Status)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@loan.Id"
+                                           class="btn btn-outline-info" title="Ver Detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-success"
+                                                data-bs-toggle="modal" data-bs-target="#returnModal@(loan.Id)"
+                                                title="Marcar como Devuelto">
+                                            <i class="fas fa-undo"></i> Devolver
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas de Vencimientos -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-warning">1-14 días</h5>
+                    <h2 class="text-warning">@Model.Count(l => l.DeliveryDate.HasValue && (DateTime.Now - l.DeliveryDate.Value).Days <= 14)</h2>
+                    <p class="card-text">Vencimientos recientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-danger">15-30 días</h5>
+                    <h2 class="text-danger">@Model.Count(l => l.DeliveryDate.HasValue && (DateTime.Now - l.DeliveryDate.Value).Days > 14 && (DateTime.Now - l.DeliveryDate.Value).Days <= 30)</h2>
+                    <p class="card-text">Requieren seguimiento</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-dark">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-dark">+30 días</h5>
+                    <h2 class="text-dark">@Model.Count(l => l.DeliveryDate.HasValue && (DateTime.Now - l.DeliveryDate.Value).Days > 30)</h2>
+                    <p class="card-text">Casos críticos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales para Devolución -->
+    @foreach (var loan in Model)
+    {
+        <div class="modal fade" id="returnModal@(loan.Id)" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form asp-action="Return" asp-route-id="@loan.Id" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Marcar como Devuelto</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <strong>Préstamo vencido por @((DateTime.Now - loan.DeliveryDate.GetValueOrDefault()).Days) día(s)</strong>
+                            </div>
+                            <p><strong>Artículo:</strong> @loan.ItemName</p>
+                            <p><strong>Usuario:</strong> @loan.UserName</p>
+                            <div class="mb-3">
+                                <label for="comments@(loan.Id)" class="form-label">Comentarios de Devolución</label>
+                                <textarea name="comments" id="comments@(loan.Id)" class="form-control" rows="3"
+                                          placeholder="Comentarios sobre la devolución tardía y el estado del artículo"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Confirmar Devolución</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+        <h4 class="text-success">¡Perfecto!</h4>
+        <p class="text-muted">No hay préstamos vencidos. Todos los artículos están al día.</p>
+        <a asp-action="Index" class="btn btn-primary">
+            <i class="fas fa-list"></i> Ver Todos los Préstamos
+        </a>
+
+        <!-- Información de depuración cuando no hay vencidos -->
+        <div class="mt-4">
+            <small class="text-muted">
+                <strong>Depuración:</strong> Se buscan préstamos con Status=2 (Delivered), ReturnDate=NULL y DeliveryDate anterior a @DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")
+            </small>
+        </div>
+    </div>
+}
+
+@functions {
+    string GetStatusBadgeClass(MyApp.Entities.Enums.LoanStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.LoanStatus.Pending => "warning",
+            MyApp.Entities.Enums.LoanStatus.Approved => "info",
+            MyApp.Entities.Enums.LoanStatus.Delivered => "primary",
+            MyApp.Entities.Enums.LoanStatus.Returned => "success",
+            MyApp.Entities.Enums.LoanStatus.Rejected => "danger",
+            _ => "secondary"
+        };
+    }
+
+    string GetStatusText(MyApp.Entities.Enums.LoanStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.LoanStatus.Pending => "Pendiente",
+            MyApp.Entities.Enums.LoanStatus.Approved => "Aprobado",
+            MyApp.Entities.Enums.LoanStatus.Delivered => "Entregado",
+            MyApp.Entities.Enums.LoanStatus.Returned => "Devuelto",
+            MyApp.Entities.Enums.LoanStatus.Rejected => "Rechazado",
+            _ => "Desconocido"
+        };
+    }
+}

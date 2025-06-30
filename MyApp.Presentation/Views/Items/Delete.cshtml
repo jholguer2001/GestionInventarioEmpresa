@@ -1,0 +1,91 @@
+﻿@model MyApp.Business.Dtos.Item.ItemDto
+@{
+    ViewData["Title"] = "Eliminar Artículo";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4><i class="fas fa-trash"></i> Eliminar Artículo</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>¡Advertencia!</strong> Esta acción no se puede deshacer. ¿Estás seguro de que quieres eliminar este artículo?
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Código:</dt>
+                            <dd class="col-sm-8"><code>@Model.Code</code></dd>
+
+                            <dt class="col-sm-4">Nombre:</dt>
+                            <dd class="col-sm-8">@Model.Name</dd>
+
+                            <dt class="col-sm-4">Categoría:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-secondary">@Model.Category</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Estado:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-@GetStatusBadgeClass(Model.Status)">
+                                    @GetStatusText(Model.Status)
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Ubicación:</dt>
+                            <dd class="col-sm-8">@Model.Location</dd>
+
+                            <dt class="col-sm-4">Creado:</dt>
+                            <dd class="col-sm-8">@Model.CreatedDate.ToString("dd MMM, yyyy")</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <form asp-action="Delete" method="post" class="d-inline">
+                    <div class="btn-group" role="group">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Sí, Eliminar
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                            <i class="fas fa-eye"></i> Ver Detalles
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusBadgeClass(MyApp.Entities.Enums.ItemStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.ItemStatus.Available => "success",
+            MyApp.Entities.Enums.ItemStatus.OnLoan => "warning",
+            MyApp.Entities.Enums.ItemStatus.Maintenance => "info",
+            MyApp.Entities.Enums.ItemStatus.Decommissioned => "danger",
+            _ => "secondary"
+        };
+    }
+
+    string GetStatusText(MyApp.Entities.Enums.ItemStatus status)
+    {
+        return status switch
+        {
+            MyApp.Entities.Enums.ItemStatus.Available => "Disponible",
+            MyApp.Entities.Enums.ItemStatus.OnLoan => "En Préstamo",
+            MyApp.Entities.Enums.ItemStatus.Maintenance => "Mantenimiento",
+            MyApp.Entities.Enums.ItemStatus.Decommissioned => "Fuera de Servicio",
+            _ => "Desconocido"
+        };
+    }
+}

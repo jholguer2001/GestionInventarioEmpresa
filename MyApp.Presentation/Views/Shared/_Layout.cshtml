@@ -1,0 +1,217 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Sistema de Gestión de Inventario</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-boxes"></i> Sistema Inventario
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <!-- Home -->
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+
+                        <!-- Artículos -->
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Items" asp-action="Index">
+                                <i class="fas fa-cubes"></i> Artículos
+                            </a>
+                        </li>
+
+                        <!-- Préstamos -->
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Loans" asp-action="Index">
+                                <i class="fas fa-handshake"></i> Préstamos
+                            </a>
+                        </li>
+
+                        <!-- Administración (Solo para Administradores) -->
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i> Administración
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <!-- Gestión de Roles -->
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Roles" asp-action="Index">
+                                            <i class="fas fa-users-cog"></i> Gestión de Roles
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <!-- Préstamos Pendientes -->
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Loans" asp-action="Pending">
+                                            <i class="fas fa-clock"></i> Préstamos Pendientes
+                                            @{
+                                                // Opcional: mostrar contador de pendientes
+                                            }
+                                        </a>
+                                    </li>
+                                    <!-- Préstamos Vencidos -->
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Loans" asp-action="Overdue">
+                                            <i class="fas fa-exclamation-triangle text-warning"></i> Préstamos Vencidos
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+
+                        <!-- Reportes (Solo para Administradores) -->
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Reports" asp-action="Index">
+                                    <i class="fas fa-chart-bar"></i> Reportes
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Mi Cuenta -->
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Operator"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user"></i> Mi Cuenta
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Loans" asp-action="Index">
+                                            <i class="fas fa-list"></i> Mis Préstamos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Loans" asp-action="Create">
+                                            <i class="fas fa-plus"></i> Solicitar Préstamo
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <span class="dropdown-item-text">
+                                            <small class="text-muted">
+                                                Conectado como: <strong>@User.Identity.Name</strong><br>
+                                                Rol: <span class="badge bg-primary">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                                            </small>
+                                        </span>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+
+                    <!-- Autenticación -->
+                    <ul class="navbar-nav">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn nav-link border-0 bg-transparent text-light">
+                                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">
+                                    <i class="fas fa-user-plus"></i> Registrarse
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Mensajes de Alerta -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle"></i> @TempData["InfoMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["WarningMessage"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> @TempData["WarningMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    &copy; 2024 - Sistema de Gestión de Inventario -
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy">Política de Privacidad</a>
+                </div>
+                <div class="col-md-4 text-end">
+                    <small>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <span>Sesión activa: @User.Identity.Name</span>
+                        }
+                        else
+                        {
+                            <span>Sesión no iniciada</span>
+                        }
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
